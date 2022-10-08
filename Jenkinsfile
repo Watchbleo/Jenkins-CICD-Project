@@ -78,11 +78,7 @@ pipeline {
         sh "ansible-playbook ${WORKSPACE}/deploy.yaml --extra-vars \"hosts=$HOSTS workspace_path=$WORKSPACE\""
       }
     }
-    stage('Approval for Prod') {
-      steps {
-        input('Do you want to proceed?')
-      }
-    }
+    
     stage('Deploy to PROD') {
       environment {
         HOSTS = "Prod"
