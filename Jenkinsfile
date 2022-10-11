@@ -46,9 +46,9 @@ pipeline {
     stage('SonarQube Scan') {
       steps {
         sh """mvn sonar:sonar \
-          -Dsonar.projectKey=JavaWebApp \
-          -Dsonar.host.url=http://172.31.19.168:9000 \
-          -Dsonar.login=34b778503876a6c4310ef5e7f00262a140b586cc"""
+              -Dsonar.projectKey=JavaWebApp \
+              -Dsonar.host.url=http://172.31.4.143:9000 \
+              -Dsonar.login=e9733df3fcd6ed54cef307d8ac4cc00eeb2d3611"""
       }
     }
     stage('Upload to Artifactory') {
@@ -58,7 +58,7 @@ pipeline {
     }
     stage('Deploy to DEV') {
       environment {
-        HOSTS = "Dev"
+        HOSTS = "dev"
       }
       steps {
         sh "ansible-playbook ${WORKSPACE}/deploy.yaml --extra-vars \"hosts=$HOSTS workspace_path=$WORKSPACE\""
@@ -69,19 +69,22 @@ pipeline {
     //     input('Do you want to proceed?')
     //   }
     // }
-    
     stage('Deploy to Stage') {
       environment {
-        HOSTS = "Stage"
+        HOSTS = "stage" // Make sure to update to "stage"
       }
       steps {
         sh "ansible-playbook ${WORKSPACE}/deploy.yaml --extra-vars \"hosts=$HOSTS workspace_path=$WORKSPACE\""
       }
     }
-    
+    stage('Approval') {
+      steps {
+        input('Do you want to proceed?')
+      }
+    }
     stage('Deploy to PROD') {
       environment {
-        HOSTS = "Prod"
+        HOSTS = "prod"
       }
       steps {
         sh "ansible-playbook ${WORKSPACE}/deploy.yaml --extra-vars \"hosts=$HOSTS workspace_path=$WORKSPACE\""
@@ -91,7 +94,7 @@ pipeline {
   post {
     always {
         echo 'Slack Notifications.'
-        slackSend channel: '#bleo-jenkins-cicd-pipeline-alerts', //update and provide your channel name
+        slackSend channel: '#mbandi-jenkins-cicd-pipeline-alerts', //update and provide your channel name
         color: COLOR_MAP[currentBuild.currentResult],
         message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
     }
